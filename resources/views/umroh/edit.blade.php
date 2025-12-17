@@ -37,7 +37,7 @@
 
                 {{-- NIK --}}
                 <div>
-                    <label class="text-white/70 text-sm">NIK (10 digit)</label>
+                    <label class="text-white/70 text-sm">NIK </label>
 
                     {{-- tampil --}}
                     <input

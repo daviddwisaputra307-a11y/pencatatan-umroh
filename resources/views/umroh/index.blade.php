@@ -40,14 +40,14 @@
         <div>
             <label class="text-white/70 text-sm">NIK</label>
             <input type="text" name="nik" value="{{ $nik ?? '' }}"
-                   placeholder="contoh: 4151..."
+                   placeholder="search"
                    class="w-full mt-2 rounded-xl px-4 py-2 bg-slate-800 text-slate-100 outline-none border border-white/10 focus:border-white/30" />
         </div>
 
         <div>
             <label class="text-white/70 text-sm">Nama</label>
             <input type="text" name="nama" value="{{ $nama ?? '' }}"
-                   placeholder="contoh: Rizki"
+                   placeholder="search"
                    class="w-full mt-2 rounded-xl px-4 py-2 bg-slate-800 text-slate-100 outline-none border border-white/10 focus:border-white/30" />
         </div>
 
