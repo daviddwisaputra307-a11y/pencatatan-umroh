@@ -8,3 +8,4 @@ Route::post('/umroh', [UmrohController::class, 'store'])->name('umroh.store');
 Route::get('/umroh/{id}/edit', [UmrohController::class, 'edit'])->name('umroh.edit');
 Route::put('/umroh/{id}', [UmrohController::class, 'update'])->name('umroh.update');
 Route::delete('/umroh/{id}', [UmrohController::class, 'destroy'])->name('umroh.destroy');
+Route::get('/umroh/export/pdf', [UmrohController::class, 'exportPdf'])->name('umroh.export.pdf');

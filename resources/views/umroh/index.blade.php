@@ -14,10 +14,12 @@
             </p>
         </div>
 
-        <a href="{{ route('umroh.create') }}"
-           class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 font-semibold">
-            + Tambah Data
-        </a>
+        <div class="flex gap-2">
+            <a href="{{ route('umroh.create') }}"
+               class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 font-semibold">
+                + Tambah Data
+            </a>
+        </div>
     </div>
 
     {{-- Flash --}}
@@ -52,13 +54,13 @@
         </div>
 
         <div>
-            <label class="text-white/70 text-sm">Tgl Awal </label>
+            <label class="text-white/70 text-sm">Tgl Awal</label>
             <input type="date" name="tgl_awal" value="{{ $awal ?? '' }}"
                    class="w-full mt-2 rounded-xl px-4 py-2 bg-slate-800 text-slate-100 outline-none border border-white/10 focus:border-white/30" />
         </div>
 
         <div>
-            <label class="text-white/70 text-sm">Tgl Akhir </label>
+            <label class="text-white/70 text-sm">Tgl Akhir</label>
             <input type="date" name="tgl_akhir" value="{{ $akhir ?? '' }}"
                    class="w-full mt-2 rounded-xl px-4 py-2 bg-slate-800 text-slate-100 outline-none border border-white/10 focus:border-white/30" />
         </div>
@@ -73,15 +75,33 @@
             </select>
         </div>
 
-        <div class="md:col-span-5 flex gap-2">
+        @php
+            $hasFilter = !empty($nik) || !empty($nama) || !empty($awal) || !empty($akhir) || !empty($jenis);
+        @endphp
+
+        <div class="md:col-span-5 flex flex-wrap gap-2">
             <button type="submit"
                     class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 font-semibold">
                 Cari
             </button>
+
             <a href="{{ route('umroh.index') }}"
                class="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 font-semibold border border-white/10">
                 Reset
             </a>
+
+            {{-- Tombol Export PDF: ngikut query filter --}}
+            <a href="{{ route('umroh.export.pdf', request()->query()) }}"
+               class="px-5 py-2 rounded-xl font-semibold border border-white/10
+                      {{ $hasFilter ? 'bg-emerald-600 hover:bg-emerald-500 text-white' : 'bg-slate-700 text-white/50 cursor-not-allowed pointer-events-none' }}">
+                Export PDF
+            </a>
+
+            @if(!$hasFilter)
+                <span class="text-white/40 text-sm self-center">
+                    (isi dulu biar PDF-nya sesuai pencarian)
+                </span>
+            @endif
         </div>
     </form>
 

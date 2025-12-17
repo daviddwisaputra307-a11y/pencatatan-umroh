@@ -1,94 +1,137 @@
 @extends('layouts.app')
 
+@section('title', 'Tambah Data Umroh')
+
 @section('content')
 <div class="max-w-3xl mx-auto p-6">
-  <div class="rounded-2xl bg-slate-900/40 border border-white/10 p-6">
-    <div class="flex items-center justify-between">
-      <h1 class="text-2xl font-semibold">Tambah Data Umroh</h1>
-      <a href="{{ route('umroh.index') }}" class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15">
-        ← Kembali
-      </a>
+    <div class="flex items-center justify-between mb-6">
+        <h1 class="text-2xl font-bold">Tambah Data Umroh</h1>
+        <a href="{{ route('umroh.index') }}"
+           class="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 border border-white/10">
+            ← Kembali
+        </a>
     </div>
 
     @if ($errors->any())
-      <div class="mt-4 rounded-xl border border-red-500/40 bg-red-500/10 p-4">
-        <div class="font-semibold mb-2">Ada error:</div>
-        <ul class="list-disc ml-6 text-red-200">
-          @foreach ($errors->all() as $e)
-            <li>{{ $e }}</li>
-          @endforeach
-        </ul>
-      </div>
+        <div class="mb-4 p-4 rounded-xl border border-red-500/30 bg-red-500/10">
+            <div class="font-semibold mb-2">Ada error nih:</div>
+            <ul class="list-disc ml-5 space-y-1">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
     @endif
 
-    <form class="mt-6 space-y-4" method="POST" action="{{ route('umroh.store') }}">
-      @csrf
+    <div class="glass rounded-2xl p-6 border border-white/10">
+        <form action="{{ route('umroh.store') }}" method="POST" class="space-y-4">
+            @csrf
 
-      {{-- NIK --}}
-      <div>
-        <label class="text-white/70 text-sm">NIK</label>
-        <input
-          type="text"
-          name="nik"
-          value="{{ old('nik') }}"
-          inputmode="numeric"
-          class="w-full mt-2 rounded-xl px-4 py-2 bg-slate-950/40 border border-white/10 outline-none"
-          placeholder="Masukkan 10 digit"
-        >
-        <div class="text-xs text-white/50 mt-1">* Wajib angka 10 digit.</div>
-      </div>
+            {{-- Dropdown Personel (NIK + Nama) --}}
+            <div>
+                <label class="block text-sm mb-1">Pilih ( NIK + Nama )</label>
+                <select id="personel_select"
+                        class="w-full px-4 py-3 rounded-xl bg-slate-800 border border-white/10 focus:outline-none">
+                    <option value="">-- pilih personel --</option>
+                    @foreach($personel as $p)
+                        <option
+                            value="{{ $p->NIK }}"
+                            data-nama="{{ $p->NM_PERSON }}"
+                            {{ old('nik') == $p->NIK ? 'selected' : '' }}
+                        >
+                            {{ $p->NIK }} - {{ $p->NM_PERSON }}
+                        </option>
+                    @endforeach
+                </select>
+                <p class="text-xs opacity-70 mt-1">Pilih salah satu, NIK & Nama auto keisi.</p>
+            </div>
 
-      {{-- Nama --}}
-      <div>
-        <label class="text-white/70 text-sm">Nama</label>
-        <input
-          type="text"
-          name="nama"
-          value="{{ old('nama') }}"
-          class="w-full mt-2 rounded-xl px-4 py-2 bg-slate-950/40 border border-white/10 outline-none"
-          placeholder="Masukkan nama"
-        >
-      </div>
-      
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div>
-    <label class="text-white/70 text-sm">Tanggal Awal</label>
-    <input type="date" name="tgl_awal" value="{{ old('tgl_awal') }}"
-      class="w-full mt-2 rounded-xl px-4 py-2 outline-none">
-  </div>
+            {{-- NIK (auto) --}}
+            <div>
+                <label class="block text-sm mb-1">NIK (auto)</label>
+                <input type="text"
+                       id="nik"
+                       name="nik"
+                       value="{{ old('nik') }}"
+                       readonly
+                       class="w-full px-4 py-3 rounded-xl bg-slate-800 border border-white/10 focus:outline-none opacity-80" />
+            </div>
 
-  <div>
-    <label class="text-white/70 text-sm">Tanggal Akhir</label>
-    <input type="date" name="tgl_akhir" value="{{ old('tgl_akhir') }}"
-      class="w-full mt-2 rounded-xl px-4 py-2 outline-none">
-  </div>
+            {{-- Nama (auto) --}}
+            <div>
+                <label class="block text-sm mb-1">Nama (auto)</label>
+                <input type="text"
+                       id="nama"
+                       name="nama"
+                       value="{{ old('nama') }}"
+                       readonly
+                       class="w-full px-4 py-3 rounded-xl bg-slate-800 border border-white/10 focus:outline-none opacity-80" />
+            </div>
+
+            {{-- Tgl Awal --}}
+            <div>
+                <label class="block text-sm mb-1">Tanggal Awal</label>
+                <input type="date"
+                       name="tgl_awal"
+                       value="{{ old('tgl_awal') }}"
+                       class="w-full px-4 py-3 rounded-xl bg-slate-800 border border-white/10 focus:outline-none" />
+            </div>
+
+            {{-- Tgl Akhir --}}
+            <div>
+                <label class="block text-sm mb-1">Tanggal Akhir</label>
+                <input type="date"
+                       name="tgl_akhir"
+                       value="{{ old('tgl_akhir') }}"
+                       class="w-full px-4 py-3 rounded-xl bg-slate-800 border border-white/10 focus:outline-none" />
+            </div>
+
+            {{-- Jenis --}}
+            <div>
+                <label class="block text-sm mb-1">Jenis Umroh</label>
+                <select name="jenis_umroh"
+                        class="w-full px-4 py-3 rounded-xl bg-slate-800 border border-white/10 focus:outline-none">
+                    <option value="">-- pilih jenis --</option>
+                    @foreach($jenisList as $j)
+                        <option value="{{ $j }}" {{ old('jenis_umroh') == $j ? 'selected' : '' }}>
+                            {{ $j }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="flex gap-3 pt-2">
+                <button type="submit"
+                        class="px-5 py-3 rounded-xl bg-sky-600 hover:bg-sky-500 font-semibold">
+                    Simpan
+                </button>
+                <a href="{{ route('umroh.index') }}"
+                   class="px-5 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 border border-white/10">
+                    Batal
+                </a>
+            </div>
+        </form>
+    </div>
 </div>
 
+{{-- JS auto isi NIK & Nama --}}
+<script>
+    const select = document.getElementById('personel_select');
+    const nikInput = document.getElementById('nik');
+    const namaInput = document.getElementById('nama');
 
-        {{-- Jenis --}}
-        <div>
-          <label class="text-white/70 text-sm">Jenis Umroh</label>
-          @php $val = old('jenis_umroh','Pribadi'); @endphp
-          <select
-            name="jenis_umroh"
-            class="w-full mt-2 rounded-xl px-4 py-2 bg-slate-950/40 border border-white/10 outline-none"
-          >
-            <option value="Pribadi" @selected($val==='Pribadi')>Pribadi</option>
-            <option value="RSI" @selected($val==='RSI')>RSI</option>
-          </select>
-        </div>
-      </div>
+    function fillFromSelect() {
+        const opt = select.options[select.selectedIndex];
+        const nik = opt.value || '';
+        const nama = opt.getAttribute('data-nama') || '';
 
-      <div class="flex gap-2 pt-2">
-        <button type="submit" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 font-semibold">
-          Simpan
-        </button>
-        <a href="{{ route('umroh.index') }}" class="px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 font-semibold">
-          Batal
-        </a>
-      </div>
+        nikInput.value = nik;
+        namaInput.value = nama;
+    }
 
-    </form>
-  </div>
-</div>
+    select.addEventListener('change', fillFromSelect);
+
+    // biar kalau ada old('nik') (habis error validate) tetap keisi
+    window.addEventListener('DOMContentLoaded', fillFromSelect);
+</script>
 @endsection

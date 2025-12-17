@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Barryvdh\DomPDF\Facade\pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -75,11 +76,20 @@ class UmrohController extends Controller
     return view('umroh.index', compact('rows', 'nik', 'nama', 'awal', 'akhir', 'jenis'));
 }
 
-    public function create()
-    {
-        $jenisList = ['Pribadi', 'RSI'];
-        return view('umroh.create', compact('jenisList'));
-    }
+   public function create()
+{
+    $jenisList = ['Pribadi', 'RSI'];
+
+    $personel = $this->conn->table('dbo.PERSONEL')
+    ->select('NIK', 'NM_PERSON')
+    ->whereNotNull('NIK')
+    ->whereNotNull('NM_PERSON')
+    ->orderBy('NM_PERSON')
+    ->get();
+
+return view('umroh.create', compact('personel', 'jenisList'));
+
+}
 
     /**
      * STORE:
@@ -185,4 +195,57 @@ class UmrohController extends Controller
         $this->conn->table('dbo.UMROH')->where('id', $id)->delete();
         return redirect()->route('umroh.index')->with('success', 'Data umroh berhasil dihapus.');
     }
+    
+    public function exportPdf(Request $request)
+    {
+    
+        $nik   = trim($request->get('nik', ''));
+    $nama  = trim($request->get('nama', ''));
+    $awal  = trim($request->get('tgl_awal', ''));
+    $akhir = trim($request->get('tgl_akhir', ''));
+    $jenis = trim($request->get('jenis', 'Semua'));
+
+    $q = $this->conn->table('dbo.UMROH as U')
+        ->select([
+            'U.NIK as nik',
+            'U.Nama as nama',
+            'U.tgl_awal as tgl_awal',
+            'U.tgl_akhir as tgl_akhir',
+            'U.jenis_umroh as jenis_umroh',
+        ]);
+
+    if ($nik !== '') {
+        $q->where('U.NIK', 'like', "%{$nik}%");
+    }
+
+    if ($nama !== '') {
+        $q->where('U.Nama', 'like', "%{$nama}%");
+    }
+
+    if ($awal !== '') {
+        $q->where('U.tgl_awal', '>=', $awal);
+    }
+
+    if ($akhir !== '') {
+        $q->where('U.tgl_akhir', '<=', $akhir);
+    }
+
+    if ($jenis !== '' && $jenis !== 'Semua') {
+        $q->where('U.jenis_umroh', $jenis);
+    }
+
+    $rows = $q->orderBy('U.tgl_awal', 'desc')->get();
+
+    $printedAt = now()->format('d-m-Y H:i');
+
+    $pdf = \PDF::loadView('umroh.export_pdf', compact(
+        'rows', 'nik', 'nama', 'awal', 'akhir', 'jenis', 'printedAt'
+    ))->setPaper('A4', 'portrait');
+
+    return $pdf->download('laporan-umroh.pdf');
 }
+
+
+
+}
+
