@@ -49,18 +49,21 @@
           placeholder="Masukkan nama"
         >
       </div>
-
+      
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {{-- Tanggal --}}
-        <div>
-          <label class="text-white/70 text-sm">Tanggal Umroh</label>
-          <input
-            type="date"
-            name="tgl_umroh"
-            value="{{ old('tgl_umroh') }}"
-            class="w-full mt-2 rounded-xl px-4 py-2 bg-slate-950/40 border border-white/10 outline-none"
-          >
-        </div>
+      <div>
+    <label class="text-white/70 text-sm">Tanggal Awal</label>
+    <input type="date" name="tgl_awal" value="{{ old('tgl_awal') }}"
+      class="w-full mt-2 rounded-xl px-4 py-2 outline-none">
+  </div>
+
+  <div>
+    <label class="text-white/70 text-sm">Tanggal Akhir</label>
+    <input type="date" name="tgl_akhir" value="{{ old('tgl_akhir') }}"
+      class="w-full mt-2 rounded-xl px-4 py-2 outline-none">
+  </div>
+</div>
+
 
         {{-- Jenis --}}
         <div>
