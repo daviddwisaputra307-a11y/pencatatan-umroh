@@ -30,6 +30,7 @@ class UmrohController extends Controller
         ->select([
             'U.id',
             'U.NIK',
+            'U.Nama',
             'U.tgl_awal',
             'U.tgl_akhir',
             'U.jenis_umroh',
@@ -112,6 +113,7 @@ class UmrohController extends Controller
         // INSERT UMROH
         $this->conn->table('dbo.UMROH')->insert([
             'NIK'        => $nik,
+            'Nama'       => $nama,
             'tgl_awal'   => $awal,
             'tgl_akhir'  => $akhir,
             'jenis_umroh'=> $jenis,
