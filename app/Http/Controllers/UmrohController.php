@@ -17,85 +17,80 @@ class UmrohController extends Controller
     }
 
     public function index(Request $request)
-{
-    $conn = $this->conn;
+    {
+        $conn = $this->conn;
 
-    $nik   = trim($request->get('nik', ''));
-    $nama  = trim($request->get('nama', ''));
-    $awal  = $request->get('tgl_awal', '');
-    $akhir = $request->get('tgl_akhir', '');
-    $jenis = $request->get('jenis', '');
+        $nik   = trim($request->get('nik', ''));
+        $nama  = trim($request->get('nama', ''));
+        $awal  = $request->get('tgl_awal', '');
+        $akhir = $request->get('tgl_akhir', '');
+        $jenis = $request->get('jenis', '');
 
-    $q = $conn->table('dbo.UMROH as U')
-        ->leftJoin('dbo.PERSONEL as P', 'P.NIK', '=', 'U.NIK')
-        ->select([
-            'U.id',
-            'U.NIK',
-            'U.Nama',
-            'U.tgl_awal',
-            'U.tgl_akhir',
-            'U.jenis_umroh',
-            // kalau Nama di UMROH null, ambil dari PERSONEL
-            \DB::raw("COALESCE(U.Nama, P.Nama) as Nama"),
-        ])
-        ->orderByDesc('U.id');
+        $q = $conn->table('dbo.UMROH as U')
+            ->leftJoin('dbo.PERSONEL as P', 'P.NIK', '=', 'U.NIK')
+            ->select([
+                'U.id',
+                'U.NIK',
+                'U.Nama',
+                'U.tgl_awal',
+                'U.tgl_akhir',
+                'U.jenis_umroh',
+                // kalau Nama di UMROH null, ambil dari PERSONEL
+                \DB::raw("COALESCE(U.Nama, P.NM_PERSON) as Nama"),
+            ])
+            ->orderByDesc('U.id');
 
-    // 1) Filter NIK
-    if ($request->filled('nik')) {
-        $q->where('U.NIK', 'like', "%{$nik}%");
+        // 1) Filter NIK
+        if ($request->filled('nik')) {
+            $q->where('U.NIK', 'like', "%{$nik}%");
+        }
+
+        // 2) Filter Nama
+        if ($request->filled('nama')) {
+            $q->where(\DB::raw("COALESCE(U.Nama, P.NM_PERSON)"), 'like', "%{$nama}%");
+        }
+
+        // 3) Filter Jenis
+        if ($request->filled('jenis')) {
+            $q->where('U.jenis_umroh', $jenis);
+        }
+
+        /**
+         * 4) Filter Tanggal:
+         * - kalau dua-duanya diisi => range (awal..akhir)
+         * - kalau cuma tgl_awal => exact match tgl_awal
+         * - kalau cuma tgl_akhir => exact match tgl_akhir
+         */
+        if ($request->filled('tgl_awal') && $request->filled('tgl_akhir')) {
+            $q->whereBetween('U.tgl_awal', [$awal, $akhir])
+            ->orWhereBetween('U.tgl_akhir', [$awal, $akhir]);
+            // kalau ini bikin kamu bingung, bilang: gue bisa bikin versi range yang lebih “strict”
+        } elseif ($request->filled('tgl_awal')) {
+            $q->where('U.tgl_awal', $awal);
+        } elseif ($request->filled('tgl_akhir')) {
+            $q->where('U.tgl_akhir', $akhir);
+        }
+
+        $rows = $q->paginate(10)->withQueryString();
+
+        return view('umroh.index', compact('rows', 'nik', 'nama', 'awal', 'akhir', 'jenis'));
     }
 
-    // 2) Filter Nama
-    if ($request->filled('nama')) {
-        $q->where(\DB::raw("COALESCE(U.Nama, P.Nama)"), 'like', "%{$nama}%");
+    public function create()
+    {
+        $jenisList = ['Pribadi', 'RSI'];
+
+        $personel = $this->conn->table('dbo.PERSONEL')
+        ->select('NIK', 'NM_PERSON')
+        ->whereNotNull('NIK')
+        ->whereNotNull('NM_PERSON')
+        ->orderBy('NM_PERSON')
+        ->get();
+
+        return view('umroh.create', compact('personel', 'jenisList'));
+
     }
 
-    // 3) Filter Jenis
-    if ($request->filled('jenis')) {
-        $q->where('U.jenis_umroh', $jenis);
-    }
-
-    /**
-     * 4) Filter Tanggal:
-     * - kalau dua-duanya diisi => range (awal..akhir)
-     * - kalau cuma tgl_awal => exact match tgl_awal
-     * - kalau cuma tgl_akhir => exact match tgl_akhir
-     */
-    if ($request->filled('tgl_awal') && $request->filled('tgl_akhir')) {
-        $q->whereBetween('U.tgl_awal', [$awal, $akhir])
-          ->orWhereBetween('U.tgl_akhir', [$awal, $akhir]); 
-        // kalau ini bikin kamu bingung, bilang: gue bisa bikin versi range yang lebih “strict”
-    } elseif ($request->filled('tgl_awal')) {
-        $q->where('U.tgl_awal', $awal);
-    } elseif ($request->filled('tgl_akhir')) {
-        $q->where('U.tgl_akhir', $akhir);
-    }
-
-    $rows = $q->paginate(10)->withQueryString();
-
-    return view('umroh.index', compact('rows', 'nik', 'nama', 'awal', 'akhir', 'jenis'));
-}
-
-   public function create()
-{
-    $jenisList = ['Pribadi', 'RSI'];
-
-    $personel = $this->conn->table('dbo.PERSONEL')
-    ->select('NIK', 'NM_PERSON')
-    ->whereNotNull('NIK')
-    ->whereNotNull('NM_PERSON')
-    ->orderBy('NM_PERSON')
-    ->get();
-
-return view('umroh.create', compact('personel', 'jenisList'));
-
-}
-
-    /**
-     * STORE:
-     * - simpan/updates PERSONEL (NIK + Nama)
-     * - insert UMROH (NIK, tgl_awal, tgl_akhir, jenis_umroh)
-     */
     public function store(Request $request)
     {
         $request->validate([
@@ -112,14 +107,6 @@ return view('umroh.create', compact('personel', 'jenisList'));
         $akhir = Carbon::parse($request->tgl_akhir)->format('Y-m-d');
         $jenis = (string) $request->jenis_umroh;
 
-        // UPSERT PERSONEL
-        $exists = $this->conn->table('dbo.PERSONEL')->where('NIK', $nik)->exists();
-        if ($exists) {
-            $this->conn->table('dbo.PERSONEL')->where('NIK', $nik)->update(['Nama' => $nama]);
-        } else {
-            $this->conn->table('dbo.PERSONEL')->insert(['NIK' => $nik, 'Nama' => $nama]);
-        }
-
         // INSERT UMROH
         $this->conn->table('dbo.UMROH')->insert([
             'NIK'        => $nik,
@@ -132,9 +119,6 @@ return view('umroh.create', compact('personel', 'jenisList'));
         return redirect()->route('umroh.index')->with('success', 'Data umroh berhasil ditambahkan.');
     }
 
-    /**
-     * EDIT: ambil data UMROH + Nama dari PERSONEL
-     */
     public function edit($id)
     {
         $row = $this->conn->table('dbo.UMROH as u')
@@ -142,7 +126,7 @@ return view('umroh.create', compact('personel', 'jenisList'));
             ->select(
                 'u.id',
                 'u.NIK',
-                'p.Nama',
+                'p.NM_PERSON as Nama',
                 'u.tgl_awal',
                 'u.tgl_akhir',
                 'u.jenis_umroh'
@@ -156,11 +140,6 @@ return view('umroh.create', compact('personel', 'jenisList'));
         return view('umroh.edit', compact('row', 'jenisList'));
     }
 
-    /**
-     * UPDATE:
-     * - update Nama di PERSONEL (biar sinkron)
-     * - update tgl_awal/tgl_akhir/jenis_umroh di UMROH
-     */
     public function update(Request $request, $id)
     {
         $request->validate([
@@ -177,9 +156,6 @@ return view('umroh.create', compact('personel', 'jenisList'));
         $akhir = Carbon::parse($request->tgl_akhir)->format('Y-m-d');
         $jenis = (string) $request->jenis_umroh;
 
-        // Update PERSONEL Nama
-        $this->conn->table('dbo.PERSONEL')->where('NIK', $nik)->update(['Nama' => $nama]);
-
         // Update UMROH
         $this->conn->table('dbo.UMROH')->where('id', $id)->update([
             'tgl_awal'   => $awal,
@@ -195,57 +171,54 @@ return view('umroh.create', compact('personel', 'jenisList'));
         $this->conn->table('dbo.UMROH')->where('id', $id)->delete();
         return redirect()->route('umroh.index')->with('success', 'Data umroh berhasil dihapus.');
     }
-    
+
     public function exportPdf(Request $request)
     {
-    
+
         $nik   = trim($request->get('nik', ''));
-    $nama  = trim($request->get('nama', ''));
-    $awal  = trim($request->get('tgl_awal', ''));
-    $akhir = trim($request->get('tgl_akhir', ''));
-    $jenis = trim($request->get('jenis', 'Semua'));
+        $nama  = trim($request->get('nama', ''));
+        $awal  = trim($request->get('tgl_awal', ''));
+        $akhir = trim($request->get('tgl_akhir', ''));
+        $jenis = trim($request->get('jenis', 'Semua'));
 
-    $q = $this->conn->table('dbo.UMROH as U')
-        ->select([
-            'U.NIK as nik',
-            'U.Nama as nama',
-            'U.tgl_awal as tgl_awal',
-            'U.tgl_akhir as tgl_akhir',
-            'U.jenis_umroh as jenis_umroh',
-        ]);
+        $q = $this->conn->table('dbo.UMROH as U')
+            ->select([
+                'U.NIK as nik',
+                'U.Nama as nama',
+                'U.tgl_awal as tgl_awal',
+                'U.tgl_akhir as tgl_akhir',
+                'U.jenis_umroh as jenis_umroh',
+            ]);
 
-    if ($nik !== '') {
-        $q->where('U.NIK', 'like', "%{$nik}%");
+        if ($nik !== '') {
+            $q->where('U.NIK', 'like', "%{$nik}%");
+        }
+
+        if ($nama !== '') {
+            $q->where('U.Nama', 'like', "%{$nama}%");
+        }
+
+        if ($awal !== '') {
+            $q->where('U.tgl_awal', '>=', $awal);
+        }
+
+        if ($akhir !== '') {
+            $q->where('U.tgl_akhir', '<=', $akhir);
+        }
+
+        if ($jenis !== '' && $jenis !== 'Semua') {
+            $q->where('U.jenis_umroh', $jenis);
+        }
+
+        $rows = $q->orderBy('U.tgl_awal', 'desc')->get();
+
+        $printedAt = now()->format('d-m-Y H:i');
+
+        $pdf = \PDF::loadView('umroh.export_pdf', compact(
+            'rows', 'nik', 'nama', 'awal', 'akhir', 'jenis', 'printedAt'
+        ))->setPaper('A4', 'portrait');
+
+        return $pdf->download('laporan-umroh.pdf');
     }
-
-    if ($nama !== '') {
-        $q->where('U.Nama', 'like', "%{$nama}%");
-    }
-
-    if ($awal !== '') {
-        $q->where('U.tgl_awal', '>=', $awal);
-    }
-
-    if ($akhir !== '') {
-        $q->where('U.tgl_akhir', '<=', $akhir);
-    }
-
-    if ($jenis !== '' && $jenis !== 'Semua') {
-        $q->where('U.jenis_umroh', $jenis);
-    }
-
-    $rows = $q->orderBy('U.tgl_awal', 'desc')->get();
-
-    $printedAt = now()->format('d-m-Y H:i');
-
-    $pdf = \PDF::loadView('umroh.export_pdf', compact(
-        'rows', 'nik', 'nama', 'awal', 'akhir', 'jenis', 'printedAt'
-    ))->setPaper('A4', 'portrait');
-
-    return $pdf->download('laporan-umroh.pdf');
-}
-
-
-
 }
 

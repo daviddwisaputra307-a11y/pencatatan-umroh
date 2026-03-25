@@ -2,7 +2,7 @@
 
 use App\Http\Controllers\UmrohController;
 
-Route::get('/umroh', [UmrohController::class, 'index'])->name('umroh.index');
+Route::get('/', [UmrohController::class, 'index'])->name('umroh.index');
 Route::get('/umroh/create', [UmrohController::class, 'create'])->name('umroh.create');
 Route::post('/umroh', [UmrohController::class, 'store'])->name('umroh.store');
 Route::get('/umroh/{id}/edit', [UmrohController::class, 'edit'])->name('umroh.edit');
