@@ -114,6 +114,48 @@
     </div>
 </div>
 
+{{-- Select2 (searchable select ala bootstrap/select2) --}}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<style>
+    .select2-container--default .select2-selection--single {
+        height: 48px;
+        border-radius: 0.75rem;
+        background: rgb(30 41 59 / 1);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        color: rgba(255, 255, 255, 0.92);
+        line-height: 48px;
+        padding-left: 14px;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 46px;
+    }
+    .select2-dropdown {
+        background: #0f172a;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.92);
+    }
+    .select2-search--dropdown .select2-search__field {
+        background: #1e293b;
+        color: rgba(255, 255, 255, 0.92);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 0.5rem;
+    }
+    .select2-results__option {
+        color: rgba(255, 255, 255, 0.92);
+    }
+    .select2-container--default .select2-results__option--highlighted.select2-results__option--selectable {
+        background-color: #0369a1;
+    }
+    .select2-container {
+        width: 100% !important;
+    }
+</style>
+
 {{-- JS auto isi NIK & Nama --}}
 <script>
     const select = document.getElementById('personel_select');
@@ -129,9 +171,15 @@
         namaInput.value = nama;
     }
 
-    select.addEventListener('change', fillFromSelect);
+    $(document).ready(function () {
+        $('#personel_select').select2({
+            placeholder: '-- pilih personel --',
+            allowClear: true,
+            width: '100%'
+        });
 
-    // biar kalau ada old('nik') (habis error validate) tetap keisi
-    window.addEventListener('DOMContentLoaded', fillFromSelect);
+        $('#personel_select').on('change', fillFromSelect);
+        fillFromSelect();
+    });
 </script>
 @endsection
